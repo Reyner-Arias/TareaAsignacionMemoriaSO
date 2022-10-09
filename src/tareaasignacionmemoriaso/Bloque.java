@@ -1,27 +1,27 @@
 package tareaasignacionmemoriaso;
 
 public class Bloque {
-    private Integer address;
-    private Integer memory;
+    private int address;
+    private int memory;
 
-    public Bloque(Integer address, Integer memory) {
+    public Bloque(int address, int memory){
         this.address = address;
         this.memory = memory;
     }
 
-    public Integer getAddress() {
+    public int getAddress() {
         return address;
     }
 
-    public void setAddress(Integer address) {
+    public void setAddress(int address) {
         this.address = address;
     }
 
-    public Integer getMemory() {
+    public int getMemory() {
         return memory;
     }
 
-    public void setMemory(Integer memory) {
+    public void setMemory(int memory) {
         this.memory = memory;
     }
 
