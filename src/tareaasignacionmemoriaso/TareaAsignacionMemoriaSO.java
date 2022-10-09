@@ -14,8 +14,6 @@ public class TareaAsignacionMemoriaSO {
         return blocks.size();
     }
     
-    
-    
     public static void main(String[] args) {
         List<Bloque> fullBlocks = new LinkedList<>();
         List<Bloque> emptyBlocks = new LinkedList<>();
@@ -78,6 +76,7 @@ public class TareaAsignacionMemoriaSO {
         System.out.println("Full"+fullBlocks.toString());
         System.out.println("Free"+emptyBlocks.toString());
         
+        //Liberar memoria
         Bloque freeBlock = fullBlocks.remove(0);
         int index = getIndex(emptyBlocks, freeBlock);
         boolean success = false;
