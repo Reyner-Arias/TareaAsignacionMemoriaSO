@@ -74,7 +74,6 @@ public class TareaAsignacionMemoriaSO {
                 emptyBlocks.remove(index-1);
             }
         }
-        
         if(!success){
             emptyBlocks.add(index, freeBlock);
         }
