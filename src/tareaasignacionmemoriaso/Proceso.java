@@ -34,4 +34,10 @@ public class Proceso {
     public Bloque freeFirstBlock(){
         return allocatedBlocks.remove(1);
     }
+    
+    @Override
+
+    public String toString() {
+        return "Proceso{" + "allocatedBlocks=" + allocatedBlocks.toString() + ", lifetime=" + lifetime + '}';
+    } 
 }
