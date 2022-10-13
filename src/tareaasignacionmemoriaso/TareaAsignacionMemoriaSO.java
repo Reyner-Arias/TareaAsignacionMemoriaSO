@@ -20,12 +20,14 @@ public class TareaAsignacionMemoriaSO {
         return blocks.size();
     }
     
-    public static void requestMemoryFirst(Proceso currentProcess, int memory){
+    public static boolean requestMemoryFirst(Proceso currentProcess, int memory){
         // Pedir memoria
+        boolean success = false; // Bandera para determinar si hay bloques libres
         boolean emptyBlock = false; // Esta bandera sirve para identificar si el bloque de memoria después de una asignación queda con un valor de 0 en la variable memoria para así eliminarlo de las lista
         int emptyBlockIndex = -1; // Index del bloque con 0 en el atributo memoria, si es que existe
         for (Bloque block : emptyBlocksFirst) {
             if(block.getMemory() >= memory){
+                success = true;
                 Bloque dinamicMem = new Bloque(block.getAddress(), memory);
                 block.setAddress(block.getAddress()+memory);
                 block.setMemory(block.getMemory()-memory);
@@ -40,50 +42,58 @@ public class TareaAsignacionMemoriaSO {
         if(emptyBlock){
             emptyBlocksFirst.remove(emptyBlockIndex);
         }
+        return success;
     }
     
-    public static void requestMemoryBest(Proceso currentProcess, int memory){
+    public static boolean requestMemoryBest(Proceso currentProcess, int memory){
         // Pedir memoria
-        int first = -1;
+        boolean success = false; // Bandera para determinar si hay bloques libres
         Bloque best = emptyBlocksBest.get(0);
         for (Bloque block : emptyBlocksBest) {
-            if(first == -1 && (block.getMemory()-memory) >= 0){
+            if(!success && (block.getMemory()-memory) >= 0){
                 best = block;
-                first = 0;
-            } else if ((block.getMemory()-memory) < (best.getMemory()-memory)){
+                success = true;
+            } else if (success && (block.getMemory()-memory) < (best.getMemory()-memory) && (block.getMemory()-memory) >= 0){
                 best = block;
             }
         }
-        Bloque dinamicMem = new Bloque(best.getAddress(), memory);
-        best.setAddress(best.getAddress()+memory);
-        best.setMemory(best.getMemory()-memory);
-        if(best.getMemory() == 0){
-           int emptyBlockIndex = emptyBlocksBest.indexOf(best);// Index del bloque con 0 en el atributo memoria, si es que existe
-           emptyBlocksBest.remove(emptyBlockIndex);
+        if(success){
+            Bloque dinamicMem = new Bloque(best.getAddress(), memory);
+            best.setAddress(best.getAddress()+memory);
+            best.setMemory(best.getMemory()-memory);
+            if(best.getMemory() == 0){
+               int emptyBlockIndex = emptyBlocksBest.indexOf(best);// Index del bloque con 0 en el atributo memoria, si es que existe
+               emptyBlocksBest.remove(emptyBlockIndex);
+            }
+            currentProcess.requestBlockBest( dinamicMem);
         }
-        currentProcess.requestBlockBest( dinamicMem);
+        return success;
     }
     
-    public static void requestMemoryWorst(Proceso currentProcess, int memory){
+    public static boolean requestMemoryWorst(Proceso currentProcess, int memory){
         // Pedir memoria
-        int first = -1; 
+        boolean success = false; // Bandera para determinar si hay bloques libres
         Bloque worst = emptyBlocksWorst.get(0);
         for (Bloque block : emptyBlocksWorst) {
-            if(first == -1 && (block.getMemory()-memory) >= 0){
+            if(!success && (block.getMemory()-memory) >= 0){
                 worst = block;
-                first = 0;
-            } else if ((block.getMemory()-memory) > (worst.getMemory()-memory)){
+                success = true;
+            } else if (success && (block.getMemory()-memory) > (worst.getMemory()-memory) && (block.getMemory()-memory) >= 0){
                 worst = block;
             }
         }
-        Bloque dinamicMem = new Bloque(worst.getAddress(), memory);
-        worst.setAddress(worst.getAddress()+memory);
-        worst.setMemory(worst.getMemory()-memory);
-        if(worst.getMemory() == 0){
-           int emptyBlockIndex = emptyBlocksWorst.indexOf(worst); // Index del bloque con 0 en el atributo memoria, si es que existe
-           emptyBlocksWorst.remove(emptyBlockIndex);
+        
+        if(success){
+            Bloque dinamicMem = new Bloque(worst.getAddress(), memory);
+            worst.setAddress(worst.getAddress()+memory);
+            worst.setMemory(worst.getMemory()-memory);
+            if(worst.getMemory() == 0){
+               int emptyBlockIndex = emptyBlocksWorst.indexOf(worst); // Index del bloque con 0 en el atributo memoria, si es que existe
+               emptyBlocksWorst.remove(emptyBlockIndex);
+            }
+            currentProcess.requestBlockWorst( dinamicMem);
         }
-        currentProcess.requestBlockWorst( dinamicMem);
+        return success;
     }
     
     public static void releaseMemory(Bloque freeBlock, List<Bloque> emptyBlocks){
@@ -126,6 +136,29 @@ public class TareaAsignacionMemoriaSO {
         }
     }
     
+    public static void getMemory(Proceso process, int ranNum){
+        boolean success;
+        // Solicitar memoria usando First Fit
+        if(!process.getRejectedFirst()) success = requestMemoryFirst(process, ranNum);
+        else success = false;
+        if(!success && !process.getRejectedFirst()) process.setRejectedFirst(true);
+        
+        // Solicitar memoria usando Best Fit
+        if(!process.getRejectedBest()) success = requestMemoryBest(process, ranNum);
+        else success = false;
+        if(!success && !process.getRejectedBest()) process.setRejectedBest(true);
+        
+        // Solicitar memoria usando Worst Fit
+        if(!process.getRejectedWorst()) success = requestMemoryWorst(process, ranNum);
+        else success = false;
+        if(!success && !process.getRejectedWorst()) process.setRejectedWorst(true);
+        
+        // Solicitar memoria usando Worst Fit
+        //if(!process.getRejectedBuddy()) success = requestMemoryBuddy(process, ranNum);
+        //else success = false;
+        //if(!success && !process.getRejectedBuddy()) process.setRejectedBuddy(true);
+    }
+    
     public static void main(String[] args) {
         emptyBlocksFirst = new LinkedList<>();
         emptyBlocksBest = new LinkedList<>();
@@ -135,7 +168,10 @@ public class TareaAsignacionMemoriaSO {
         int totalMemory = 1000000; // Memoria total inicial
         List<Proceso> processes = new LinkedList<>();
         List<Proceso> finishedProcesses = new LinkedList<>();
-        int rejectedProcesses = 0;
+        int rejectedProcsFirst = 0;
+        int rejectedProcsBest = 0;
+        int rejectedProcsWorst = 0;
+        int rejectedProcsBuddy = 0;
         
         Bloque initFirst = new Bloque(0, totalMemory); // Inicializar el primer bloque libre (la memoria completa) First Fit
         Bloque initBest = new Bloque(0, totalMemory); // Inicializar el primer bloque libre (la memoria completa) Best Fit
@@ -150,16 +186,13 @@ public class TareaAsignacionMemoriaSO {
         Random random = new Random();
         random.setSeed(12345L); // Establecer semilla para los valores randomizados
         
-        for(int i = 0; i < 100; i++){ // For para inicializar los 100 procesos
-            Proceso process = new Proceso(random.nextInt(271)+30); // Crear una nueva instancia de la clase Proceso con un tiempo de vida de 30 a 300 segundos
-            int ranNum = random.nextInt(151)+50;
-            requestMemoryFirst(process, ranNum); // Solicitar el bloque de memoria inicial de 50 a 200 bytes
-            requestMemoryBest(process, ranNum);
-            requestMemoryWorst(process, ranNum);
-            //requestMemoryBuddy(process, ranNum);
-            System.out.println(process.toString());
-            processes.add(process);
-        }
+        int procCount = 0; //Cantidad de procesos creados hasta el momento
+        
+        int firstRanNum = random.nextInt(151)+50;
+        Proceso firstProcess = new Proceso(random.nextInt(271)+30); // Crear una nueva instancia de la clase Proceso con un tiempo de vida de 30 a 300 segundos
+        getMemory(firstProcess, firstRanNum);
+        processes.add(firstProcess);
+        procCount++;
         
         while(!processes.isEmpty()){
             for(Proceso process : processes){

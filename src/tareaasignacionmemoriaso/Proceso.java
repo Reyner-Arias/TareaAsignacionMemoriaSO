@@ -9,6 +9,10 @@ public class Proceso {
     private final List<Bloque> allocatedBlocksBest;
     private final List<Bloque> allocatedBlocksWorst;
     private final List<Bloque> allocatedBlocksBuddy;
+    private boolean rejectedFirst;
+    private boolean rejectedBest;
+    private boolean rejectedWorst;
+    private boolean rejectedBuddy;
     private final int lifetime;
     private final int pid;
     private final long startTime;
@@ -21,6 +25,10 @@ public class Proceso {
         this.lifetime = lifetime;
         this.pid = consecutivo++;
         this.startTime = System.currentTimeMillis();
+        this.rejectedFirst = false;
+        this.rejectedBest = false;
+        this.rejectedWorst = false;
+        this.rejectedBuddy = false;
     }
 
     public List<Bloque> getAllocatedBlocksFirst() {
@@ -81,6 +89,38 @@ public class Proceso {
 
     public long getStartTime() {
         return startTime;
+    }
+
+    public boolean getRejectedFirst() {
+        return rejectedFirst;
+    }
+
+    public void setRejectedFirst(boolean rejectedFirst) {
+        this.rejectedFirst = rejectedFirst;
+    }
+
+    public boolean getRejectedBest() {
+        return rejectedBest;
+    }
+
+    public void setRejectedBest(boolean rejectedBest) {
+        this.rejectedBest = rejectedBest;
+    }
+
+    public boolean getRejectedWorst() {
+        return rejectedWorst;
+    }
+
+    public void setRejectedWorst(boolean rejectedWorst) {
+        this.rejectedWorst = rejectedWorst;
+    }
+
+    public boolean getRejectedBuddy() {
+        return rejectedBuddy;
+    }
+
+    public void setRejectedBuddy(boolean rejectedBuddy) {
+        this.rejectedBuddy = rejectedBuddy;
     }
     
     @Override
