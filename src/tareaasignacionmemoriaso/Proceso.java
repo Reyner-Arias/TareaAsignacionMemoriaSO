@@ -1,5 +1,6 @@
 package tareaasignacionmemoriaso;
 
+import java.awt.Color;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -16,8 +17,9 @@ public class Proceso {
     private final int lifetime;
     private final int pid;
     private final long startTime;
+    private final Color color;
 
-    public Proceso(int lifetime) {
+    public Proceso(int lifetime, Color color) {
         this.allocatedBlocksFirst = new LinkedList<>();
         this.allocatedBlocksBest = new LinkedList<>();
         this.allocatedBlocksWorst = new LinkedList<>();
@@ -29,6 +31,7 @@ public class Proceso {
         this.rejectedBest = false;
         this.rejectedWorst = false;
         this.rejectedBuddy = false;
+        this.color = color;
     }
 
     public List<Bloque> getAllocatedBlocksFirst() {
@@ -121,6 +124,10 @@ public class Proceso {
 
     public void setRejectedBuddy(boolean rejectedBuddy) {
         this.rejectedBuddy = rejectedBuddy;
+    }
+
+    public Color getColor() {
+        return color;
     }
     
     @Override

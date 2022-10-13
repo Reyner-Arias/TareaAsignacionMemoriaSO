@@ -1,5 +1,6 @@
 package tareaasignacionmemoriaso;
 
+import java.awt.Color;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -10,6 +11,10 @@ public class TareaAsignacionMemoriaSO {
     private static List<Bloque> emptyBlocksBest;
     private static List<Bloque> emptyBlocksWorst;
     private static List<Bloque> emptyBlocksBuddy;
+    private int rejectedProcsFirst = 0;
+    private int rejectedProcsBest = 0;
+    private int rejectedProcsWorst = 0;
+    private int rejectedProcsBuddy = 0;
     
     public static int getIndex(List<Bloque> blocks, Bloque newBlock){
         for (Bloque block : blocks) {
@@ -157,6 +162,53 @@ public class TareaAsignacionMemoriaSO {
         //if(!process.getRejectedBuddy()) success = requestMemoryBuddy(process, ranNum);
         //else success = false;
         //if(!success && !process.getRejectedBuddy()) process.setRejectedBuddy(true);
+        
+        // Actualizar ventana
+    }
+    
+    
+    public static List<Color> pick(int num) {
+        List<Color> colors = new LinkedList<>();
+        if (num < 2)
+            return colors;
+        float dx = 1.0f / (float) (num - 1);
+        for (int i = 0; i < num; i++) {
+            colors.add(get(i * dx));
+        }
+        return colors;
+    }
+
+    public static Color get(float x) {
+        float r = 0.0f;
+        float g = 0.0f;
+        float b = 1.0f;
+        if (x >= 0.0f && x < 0.2f) {
+            x = x / 0.2f;
+            r = 0.0f;
+            g = x;
+            b = 1.0f;
+        } else if (x >= 0.2f && x < 0.4f) {
+            x = (x - 0.2f) / 0.2f;
+            r = 0.0f;
+            g = 1.0f;
+            b = 1.0f - x;
+        } else if (x >= 0.4f && x < 0.6f) {
+            x = (x - 0.4f) / 0.2f;
+            r = x;
+            g = 1.0f;
+            b = 0.0f;
+        } else if (x >= 0.6f && x < 0.8f) {
+            x = (x - 0.6f) / 0.2f;
+            r = 1.0f;
+            g = 1.0f - x;
+            b = 0.0f;
+        } else if (x >= 0.8f && x <= 1.0f) {
+            x = (x - 0.8f) / 0.2f;
+            r = 1.0f;
+            g = 0.0f;
+            b = x;
+        }
+        return new Color(r, g, b);
     }
     
     public static void main(String[] args) {
@@ -168,10 +220,6 @@ public class TareaAsignacionMemoriaSO {
         int totalMemory = 1000000; // Memoria total inicial
         List<Proceso> processes = new LinkedList<>();
         List<Proceso> finishedProcesses = new LinkedList<>();
-        int rejectedProcsFirst = 0;
-        int rejectedProcsBest = 0;
-        int rejectedProcsWorst = 0;
-        int rejectedProcsBuddy = 0;
         
         Bloque initFirst = new Bloque(0, totalMemory); // Inicializar el primer bloque libre (la memoria completa) First Fit
         Bloque initBest = new Bloque(0, totalMemory); // Inicializar el primer bloque libre (la memoria completa) Best Fit
@@ -188,7 +236,13 @@ public class TareaAsignacionMemoriaSO {
         
         int procCount = 0; //Cantidad de procesos creados hasta el momento
         
+        
         int firstRanNum = random.nextInt(151)+50;
+        
+        List<Color> colores = pick(100);
+        System.out.println(colores.toString()); 
+        
+        /*
         Proceso firstProcess = new Proceso(random.nextInt(271)+30); // Crear una nueva instancia de la clase Proceso con un tiempo de vida de 30 a 300 segundos
         getMemory(firstProcess, firstRanNum);
         processes.add(firstProcess);
@@ -235,5 +289,6 @@ public class TareaAsignacionMemoriaSO {
             }
             finishedProcesses.removeAll(finishedProcesses);
         }
+        */
     }
 }
