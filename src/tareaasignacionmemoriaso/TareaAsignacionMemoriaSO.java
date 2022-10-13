@@ -61,7 +61,7 @@ public class TareaAsignacionMemoriaSO {
            int emptyBlockIndex = emptyBlocksBest.indexOf(best);// Index del bloque con 0 en el atributo memoria, si es que existe
            emptyBlocksBest.remove(emptyBlockIndex);
         }
-        currentProcess.requestBlockFirst( dinamicMem);
+        currentProcess.requestBlockBest( dinamicMem);
     }
     
     public static void requestMemoryWorst(Proceso currentProcess, int memory){
@@ -83,7 +83,7 @@ public class TareaAsignacionMemoriaSO {
            int emptyBlockIndex = emptyBlocksWorst.indexOf(worst); // Index del bloque con 0 en el atributo memoria, si es que existe
            emptyBlocksWorst.remove(emptyBlockIndex);
         }
-        currentProcess.requestBlockFirst( dinamicMem);
+        currentProcess.requestBlockWorst( dinamicMem);
     }
     
     public static void releaseMemory(Bloque freeBlock, List<Bloque> emptyBlocks){
@@ -134,6 +134,8 @@ public class TareaAsignacionMemoriaSO {
         
         int totalMemory = 1000000; // Memoria total inicial
         List<Proceso> processes = new LinkedList<>();
+        List<Proceso> finishedProcesses = new LinkedList<>();
+        int rejectedProcesses = 0;
         
         Bloque initFirst = new Bloque(0, totalMemory); // Inicializar el primer bloque libre (la memoria completa) First Fit
         Bloque initBest = new Bloque(0, totalMemory); // Inicializar el primer bloque libre (la memoria completa) Best Fit
@@ -157,6 +159,48 @@ public class TareaAsignacionMemoriaSO {
             //requestMemoryBuddy(process, ranNum);
             System.out.println(process.toString());
             processes.add(process);
+        }
+        
+        while(!processes.isEmpty()){
+            for(Proceso process : processes){
+                long currentTime = System.currentTimeMillis(); // Obtener el tiempo actual en milisegundos
+                double timePassed = (double) (process.getStartTime()-currentTime)/1000; // Tiempo pasado desde la creación del proceso
+                boolean finishFlag = timePassed > process.getLifetime(); // Bandera que determina si un proceso ya finalizo su tiempo de ejecución
+                
+                if(!finishFlag){ //Funcionamiento normal de los procesos
+                    int action = random.nextInt(10)+1;
+                    if(action <= 7){
+                        int ranNum = random.nextInt(151)+50;
+                        requestMemoryFirst(process, ranNum); // Solicitar un valor de 50 a 200 bytes de memoria
+                        requestMemoryBest(process, ranNum);
+                        requestMemoryWorst(process, ranNum);
+                        //requestMemoryBuddy(process, ranNum);
+                    }
+                } else { //Liberar toda la memoria de un proceso que finaliza su ejecución, para las 4 memorias de cada algoritmo
+                    for(int i = 0; i < process.getAllocatedBlocksFirst().size(); i++){
+                        Bloque freeBlock = process.freeBlockFirst();
+                        releaseMemory(freeBlock, emptyBlocksFirst);
+                    }
+                    for(int i = 0; i < process.getAllocatedBlocksBest().size(); i++){
+                        Bloque freeBlock = process.freeBlockBest();
+                        releaseMemory(freeBlock, emptyBlocksBest);
+                    }
+                    for(int i = 0; i < process.getAllocatedBlocksWorst().size(); i++){
+                        Bloque freeBlock = process.freeBlockWorst();
+                        releaseMemory(freeBlock, emptyBlocksWorst);
+                    }
+                    for(int i = 0; i < process.getAllocatedBlocksBuddy().size(); i++){
+                        Bloque freeBlock = process.freeBlockBuddy();
+                        releaseMemory(freeBlock, emptyBlocksBuddy);
+                    }
+                    finishedProcesses.add(process); 
+                }
+            }
+            // Eliminar de la lista de procesos los finalizados o rechazados
+            for(Proceso process : finishedProcesses){
+                processes.remove(process);
+            }
+            finishedProcesses.removeAll(finishedProcesses);
         }
     }
 }

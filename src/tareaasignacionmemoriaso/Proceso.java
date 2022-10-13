@@ -11,6 +11,7 @@ public class Proceso {
     private final List<Bloque> allocatedBlocksBuddy;
     private final int lifetime;
     private final int pid;
+    private final long startTime;
 
     public Proceso(int lifetime) {
         this.allocatedBlocksFirst = new LinkedList<>();
@@ -19,6 +20,7 @@ public class Proceso {
         this.allocatedBlocksBuddy = new LinkedList<>();
         this.lifetime = lifetime;
         this.pid = consecutivo++;
+        this.startTime = System.currentTimeMillis();
     }
 
     public List<Bloque> getAllocatedBlocksFirst() {
@@ -75,6 +77,10 @@ public class Proceso {
     
     public Bloque freeBlockBuddy(){
         return allocatedBlocksBuddy.remove(1);
+    }
+
+    public long getStartTime() {
+        return startTime;
     }
     
     @Override
