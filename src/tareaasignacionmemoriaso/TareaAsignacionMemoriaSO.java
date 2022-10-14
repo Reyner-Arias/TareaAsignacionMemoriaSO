@@ -11,10 +11,10 @@ public class TareaAsignacionMemoriaSO {
     private static List<Bloque> emptyBlocksBest;
     private static List<Bloque> emptyBlocksWorst;
     private static List<Bloque> emptyBlocksBuddy;
-    private int rejectedProcsFirst = 0;
-    private int rejectedProcsBest = 0;
-    private int rejectedProcsWorst = 0;
-    private int rejectedProcsBuddy = 0;
+    private static int rejectedProcsFirst = 0;
+    private static int rejectedProcsBest = 0;
+    private static int rejectedProcsWorst = 0;
+    private static int rejectedProcsBuddy = 0;
     
     public static int getIndex(List<Bloque> blocks, Bloque newBlock){
         for (Bloque block : blocks) {
@@ -146,23 +146,34 @@ public class TareaAsignacionMemoriaSO {
         // Solicitar memoria usando First Fit
         if(!process.getRejectedFirst()) success = requestMemoryFirst(process, ranNum);
         else success = false;
-        if(!success && !process.getRejectedFirst()) process.setRejectedFirst(true);
+        if(!success && !process.getRejectedFirst()) {
+            process.setRejectedFirst(true);
+            rejectedProcsFirst++;
+        }
         
         // Solicitar memoria usando Best Fit
         if(!process.getRejectedBest()) success = requestMemoryBest(process, ranNum);
         else success = false;
-        if(!success && !process.getRejectedBest()) process.setRejectedBest(true);
+        if(!success && !process.getRejectedBest()) {
+            process.setRejectedBest(true);
+            rejectedProcsBest++;
+        }
         
         // Solicitar memoria usando Worst Fit
         if(!process.getRejectedWorst()) success = requestMemoryWorst(process, ranNum);
         else success = false;
-        if(!success && !process.getRejectedWorst()) process.setRejectedWorst(true);
+        if(!success && !process.getRejectedWorst()) {
+            process.setRejectedWorst(true);
+            rejectedProcsWorst++;
+        }
         
         // Solicitar memoria usando Worst Fit
-        //if(!process.getRejectedBuddy()) success = requestMemoryBuddy(process, ranNum);
-        //else success = false;
-        //if(!success && !process.getRejectedBuddy()) process.setRejectedBuddy(true);
-        
+        /*if(!process.getRejectedBuddy()) success = requestMemoryBuddy(process, ranNum);
+        else success = false;
+        if(!success && !process.getRejectedBuddy()) {
+            process.setRejectedBuddy(true);
+            rejectedProcsBuddy++;
+        }*/
         // Actualizar ventana
     }
     
@@ -236,19 +247,34 @@ public class TareaAsignacionMemoriaSO {
         
         int procCount = 0; //Cantidad de procesos creados hasta el momento
         
-        
         int firstRanNum = random.nextInt(151)+50;
         
         List<Color> colores = pick(100);
         System.out.println(colores.toString()); 
         
-        /*
-        Proceso firstProcess = new Proceso(random.nextInt(271)+30); // Crear una nueva instancia de la clase Proceso con un tiempo de vida de 30 a 300 segundos
+        Proceso firstProcess = new Proceso(random.nextInt(271)+30, colores.get(procCount)); // Crear una nueva instancia de la clase Proceso con un tiempo de vida de 30 a 300 segundos
         getMemory(firstProcess, firstRanNum);
         processes.add(firstProcess);
         procCount++;
+        long pastProcessTime = System.currentTimeMillis(); // Obtener el tiempo actual en milisegundos para conocer hace cuánto se definió el último proceso
+        int betweenTime = random.nextInt(21)+10;
         
         while(!processes.isEmpty()){
+            //Revisar si se debe crear un nuevo proceso
+            long currentProcessTime = System.currentTimeMillis(); // Obtener el tiempo actual en milisegundos
+            double time = (double) (pastProcessTime-currentProcessTime)/1000;
+            if(time>betweenTime){
+                // Código de creación de un proceso nuevo cada n tiempo entre 10 o 30 segundos
+                int ranNum = random.nextInt(151)+50;
+                Proceso process = new Proceso(random.nextInt(271)+30, colores.get(procCount)); // Crear una nueva instancia de la clase Proceso con un tiempo de vida de 30 a 300 segundos
+                getMemory(process, ranNum);
+                processes.add(process);
+                procCount++;
+                pastProcessTime = System.currentTimeMillis(); // Obtener el tiempo actual en milisegundos para conocer hace cuánto se definió el último proceso
+                betweenTime = random.nextInt(21)+10;
+            }
+            
+            //Lista que define que acción hace cada proceso
             for(Proceso process : processes){
                 long currentTime = System.currentTimeMillis(); // Obtener el tiempo actual en milisegundos
                 double timePassed = (double) (process.getStartTime()-currentTime)/1000; // Tiempo pasado desde la creación del proceso
@@ -258,10 +284,9 @@ public class TareaAsignacionMemoriaSO {
                     int action = random.nextInt(10)+1;
                     if(action <= 7){
                         int ranNum = random.nextInt(151)+50;
-                        requestMemoryFirst(process, ranNum); // Solicitar un valor de 50 a 200 bytes de memoria
-                        requestMemoryBest(process, ranNum);
-                        requestMemoryWorst(process, ranNum);
-                        //requestMemoryBuddy(process, ranNum);
+                        getMemory(process, ranNum);
+                    } else{
+                        // Liberar memoria random
                     }
                 } else { //Liberar toda la memoria de un proceso que finaliza su ejecución, para las 4 memorias de cada algoritmo
                     for(int i = 0; i < process.getAllocatedBlocksFirst().size(); i++){
@@ -289,6 +314,6 @@ public class TareaAsignacionMemoriaSO {
             }
             finishedProcesses.removeAll(finishedProcesses);
         }
-        */
+        
     }
 }
