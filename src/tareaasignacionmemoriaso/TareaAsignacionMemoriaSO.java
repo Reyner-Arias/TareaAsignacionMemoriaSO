@@ -1,6 +1,9 @@
 package tareaasignacionmemoriaso;
 
 import java.awt.Color;
+import static java.lang.Math.ceil;
+import static java.lang.Math.log;
+import static java.lang.Math.pow;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -97,6 +100,63 @@ public class TareaAsignacionMemoriaSO {
                emptyBlocksWorst.remove(emptyBlockIndex);
             }
             currentProcess.requestBlockWorst( dinamicMem);
+        }
+        return success;
+    }
+    
+    public static boolean requestMemoryBuddy(Proceso currentProcess, int memory){
+        // Pedir memoria
+        double next = pow(2, ceil(log(memory)/log(2)));
+        boolean success = false; // Bandera para determinar si hay bloques libres
+        boolean reject = false;
+        int iterCount = 0;
+        int emptyBlockIndex = -1;
+        int indexOfBlock = -1;
+        boolean notOptimalBlock = false;
+        while(!success || !reject){
+            if(notOptimalBlock){
+                Bloque block = emptyBlocksBuddy.get(indexOfBlock);
+                int halfMemory = block.getMemory()/2;
+                emptyBlocksBuddy.get(indexOfBlock).setMemory(block.getMemory()-halfMemory);
+                Bloque emptyBlock = new Bloque(block.getAddress()+halfMemory, halfMemory);
+                if(emptyBlocksBuddy.size() != indexOfBlock) emptyBlocksBuddy.add(indexOfBlock+1,emptyBlock);
+                else emptyBlocksBuddy.add(emptyBlock);
+            }
+            for (Bloque block : emptyBlocksBuddy){
+                indexOfBlock = emptyBlocksBuddy.indexOf(block);
+                if(block.getMemory() == 1){
+                    Bloque dinamicMem = new Bloque(block.getAddress(), memory);
+                    block.setAddress(block.getAddress()+memory);
+                    block.setMemory(block.getMemory()-memory);
+                    if(block.getMemory() == 0){
+                       emptyBlockIndex = emptyBlocksBuddy.indexOf(block); // Index del bloque con 0 en el atributo memoria, si es que existe
+                    }
+                    currentProcess.requestBlockBuddy( dinamicMem);
+                    success = true;
+                }else if (block.getMemory()>memory){
+                    int halfMemory = block.getMemory()/2;
+                    if (halfMemory < memory){
+                        Bloque dinamicMem = new Bloque(block.getAddress(), (int)next);
+                        block.setAddress(block.getAddress()+(int)next);
+                        block.setMemory(block.getMemory()-(int)next);
+                        if(block.getMemory() == 0){
+                           emptyBlockIndex = emptyBlocksBuddy.indexOf(block); // Index del bloque con 0 en el atributo memoria, si es que existe
+                        }
+                        currentProcess.requestBlockBuddy( dinamicMem);
+                        success = true;
+                    }else{
+                        notOptimalBlock = true;
+                        break;
+                    }
+                }
+                iterCount++;
+            }
+            if (iterCount == emptyBlocksBuddy.size()){
+                reject = true;
+            }
+        }
+        if (emptyBlockIndex != -1){
+            emptyBlocksBuddy.remove(emptyBlockIndex);
         }
         return success;
     }
@@ -228,7 +288,7 @@ public class TareaAsignacionMemoriaSO {
         emptyBlocksWorst = new LinkedList<>();
         emptyBlocksBuddy = new LinkedList<>();
         
-        int totalMemory = 1000000; // Memoria total inicial
+        int totalMemory = 1048576; // Memoria total inicial
         List<Proceso> processes = new LinkedList<>();
         List<Proceso> finishedProcesses = new LinkedList<>();
         
