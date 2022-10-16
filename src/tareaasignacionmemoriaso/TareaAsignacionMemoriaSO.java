@@ -228,13 +228,43 @@ public class TareaAsignacionMemoriaSO {
         }
         
         // Solicitar memoria usando Worst Fit
-        /*if(!process.getRejectedBuddy()) success = requestMemoryBuddy(process, ranNum);
+        if(!process.getRejectedBuddy()) success = requestMemoryBuddy(process, ranNum);
         else success = false;
         if(!success && !process.getRejectedBuddy()) {
             process.setRejectedBuddy(true);
             rejectedProcsBuddy++;
-        }*/
-        // Actualizar ventana
+        }
+    }
+    
+    // Liberar un espacio de memoria random por cada algoritmo
+    public static void freeMemory(Proceso process, Random random){
+        // Liberar memoria random usando First Fit
+        if(!process.getRejectedFirst() && process.getAllocatedBlocksFirst().size() > 1) {
+            int ranNum = random.nextInt(process.getAllocatedBlocksFirst().size()-1)+1;
+            Bloque removedBlock = process.freeBlockFirst(ranNum);
+            releaseMemory(removedBlock, emptyBlocksFirst);
+        }
+        
+        // Liberar memoria random usando Best Fit
+        if(!process.getRejectedBest() && process.getAllocatedBlocksBest().size() > 1) {
+            int ranNum = random.nextInt(process.getAllocatedBlocksBest().size()-1)+1;
+            Bloque removedBlock = process.freeBlockBest(ranNum);
+            releaseMemory(removedBlock, emptyBlocksBest);
+        }
+        
+        // Liberar memoria random usando Worst Fit
+        if(!process.getRejectedWorst() && process.getAllocatedBlocksWorst().size() > 1) {
+            int ranNum = random.nextInt(process.getAllocatedBlocksWorst().size()-1)+1;
+            Bloque removedBlock = process.freeBlockWorst(ranNum);
+            releaseMemory(removedBlock, emptyBlocksWorst);
+        }
+        
+        // Liberar memoria random usando Buddy Fit
+        if(!process.getRejectedBuddy() && process.getAllocatedBlocksBuddy().size() > 1) {
+            int ranNum = random.nextInt(process.getAllocatedBlocksBuddy().size()-1)+1;
+            Bloque removedBlock = process.freeBlockBuddy(ranNum);
+            releaseMemory(removedBlock, emptyBlocksBuddy);
+        }
     }
     
     
@@ -298,9 +328,9 @@ public class TareaAsignacionMemoriaSO {
         Bloque initBuddy = new Bloque(0, totalMemory); // Inicializar el primer bloque libre (la memoria completa) Buddy System
         
         emptyBlocksFirst.add(initFirst); // Añardilo a la lista de bloques vacíos First Fit
-        emptyBlocksFirst.add(initBest); // Añardilo a la lista de bloques vacíos Best Fit
-        emptyBlocksFirst.add(initWorst); // Añardilo a la lista de bloques vacíos Worst Fit
-        emptyBlocksFirst.add(initBuddy); // Añardilo a la lista de bloques vacíos Buddy System
+        emptyBlocksBest.add(initBest); // Añardilo a la lista de bloques vacíos Best Fit
+        emptyBlocksWorst.add(initWorst); // Añardilo a la lista de bloques vacíos Worst Fit
+        emptyBlocksBuddy.add(initBuddy); // Añardilo a la lista de bloques vacíos Buddy System
         
         Random random = new Random();
         random.setSeed(12345L); // Establecer semilla para los valores randomizados
@@ -310,7 +340,6 @@ public class TareaAsignacionMemoriaSO {
         int firstRanNum = random.nextInt(151)+50;
         
         List<Color> colores = pick(100);
-        System.out.println(colores.toString()); 
         
         Proceso firstProcess = new Proceso(random.nextInt(271)+30, colores.get(procCount)); // Crear una nueva instancia de la clase Proceso con un tiempo de vida de 30 a 300 segundos
         getMemory(firstProcess, firstRanNum);
@@ -345,28 +374,30 @@ public class TareaAsignacionMemoriaSO {
                     if(action <= 7){
                         int ranNum = random.nextInt(151)+50;
                         getMemory(process, ranNum);
-                    } else{
-                        // Liberar memoria random
+                        if(process.isProcessRejected()) finishedProcesses.add(process); 
+                    } else {
+                        freeMemory(process, random);
                     }
                 } else { //Liberar toda la memoria de un proceso que finaliza su ejecución, para las 4 memorias de cada algoritmo
                     for(int i = 0; i < process.getAllocatedBlocksFirst().size(); i++){
-                        Bloque freeBlock = process.freeBlockFirst();
+                        Bloque freeBlock = process.freeBlockFirst(i);
                         releaseMemory(freeBlock, emptyBlocksFirst);
                     }
                     for(int i = 0; i < process.getAllocatedBlocksBest().size(); i++){
-                        Bloque freeBlock = process.freeBlockBest();
+                        Bloque freeBlock = process.freeBlockBest(i);
                         releaseMemory(freeBlock, emptyBlocksBest);
                     }
                     for(int i = 0; i < process.getAllocatedBlocksWorst().size(); i++){
-                        Bloque freeBlock = process.freeBlockWorst();
+                        Bloque freeBlock = process.freeBlockWorst(i);
                         releaseMemory(freeBlock, emptyBlocksWorst);
                     }
                     for(int i = 0; i < process.getAllocatedBlocksBuddy().size(); i++){
-                        Bloque freeBlock = process.freeBlockBuddy();
+                        Bloque freeBlock = process.freeBlockBuddy(i);
                         releaseMemory(freeBlock, emptyBlocksBuddy);
                     }
                     finishedProcesses.add(process); 
                 }
+                //Actualizar ventana
             }
             // Eliminar de la lista de procesos los finalizados o rechazados
             for(Proceso process : finishedProcesses){

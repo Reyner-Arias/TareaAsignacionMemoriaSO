@@ -74,20 +74,20 @@ public class Proceso {
         allocatedBlocksBuddy.add( block);
     }
     
-    public Bloque freeBlockFirst(){
-        return allocatedBlocksFirst.remove(1);
+    public Bloque freeBlockFirst(int index){
+        return allocatedBlocksFirst.remove(index);
     }
     
-    public Bloque freeBlockBest(){
-        return allocatedBlocksBest.remove(1);
+    public Bloque freeBlockBest(int index){
+        return allocatedBlocksBest.remove(index);
     }
     
-    public Bloque freeBlockWorst(){
-        return allocatedBlocksWorst.remove(1);
+    public Bloque freeBlockWorst(int index){
+        return allocatedBlocksWorst.remove(index);
     }
     
-    public Bloque freeBlockBuddy(){
-        return allocatedBlocksBuddy.remove(1);
+    public Bloque freeBlockBuddy(int index){
+        return allocatedBlocksBuddy.remove(index);
     }
 
     public long getStartTime() {
@@ -128,6 +128,10 @@ public class Proceso {
 
     public Color getColor() {
         return color;
+    }
+    
+    public boolean isProcessRejected(){
+        return !rejectedFirst && !rejectedBest && !rejectedWorst && !rejectedBuddy;
     }
     
     @Override
