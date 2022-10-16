@@ -16,23 +16,29 @@ import tareaasignacionmemoriaso.Proceso;
 public class Visualization extends javax.swing.JFrame {
 
     static int memory = 1000;
-    private static List<Proceso> processes;
+    private List<Proceso> processes;
     public Visualization(List<Proceso> processes){
         this.processes = processes;
         setTitle("Tutorial");
         setSize(memory+20, 500);
-        setVisible(true);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
+    
+    public void updateWindow(List<Proceso> processes){
+        setVisible(false);
+        this.processes = processes;
+        setVisible(true);
+    }
+    
     
     public void paint(Graphics g) {
         int y = 50;
         for(Proceso process: processes ){
             for(Bloque block: process.getAllocatedBlocksFirst() ){
+                
                 g.setColor(process.getColor());
-                g.fillRect(block.getAddress(),y, block.getAddress()+block.getMemory(), 50);    
-            }
-            y+=60;
+                g.fillRect(block.getAddress(),y, block.getAddress()+block.getMemory(), 50);   
+            } 
         }
     }
     /**
@@ -60,9 +66,6 @@ public class Visualization extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    public static void main(String args[]) {
-        
-    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables

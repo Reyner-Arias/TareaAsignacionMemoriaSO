@@ -1,5 +1,6 @@
 package tareaasignacionmemoriaso;
 
+import Visualization.Visualization;
 import java.awt.Color;
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
@@ -337,6 +338,8 @@ public class TareaAsignacionMemoriaSO {
         
         int procCount = 0; //Cantidad de procesos creados hasta el momento
         
+        
+        
         int firstRanNum = random.nextInt(151)+50;
         
         List<Color> colores = pick(100);
@@ -348,7 +351,7 @@ public class TareaAsignacionMemoriaSO {
         long pastProcessTime = System.currentTimeMillis(); // Obtener el tiempo actual en milisegundos para conocer hace cuánto se definió el último proceso
         int betweenTime = random.nextInt(21)+10;
         
-        while(!processes.isEmpty()){
+        while(!processes.isEmpty() && procCount <= 100){
             //Revisar si se debe crear un nuevo proceso
             long currentProcessTime = System.currentTimeMillis(); // Obtener el tiempo actual en milisegundos
             double time = (double) (pastProcessTime-currentProcessTime)/1000;
@@ -397,7 +400,9 @@ public class TareaAsignacionMemoriaSO {
                     }
                     finishedProcesses.add(process); 
                 }
-                //Actualizar ventana
+                System.out.println(process.toString());
+                Visualization vis = new Visualization(processes);
+                vis.updateWindow(processes);//Actualizar ventana
             }
             // Eliminar de la lista de procesos los finalizados o rechazados
             for(Proceso process : finishedProcesses){
