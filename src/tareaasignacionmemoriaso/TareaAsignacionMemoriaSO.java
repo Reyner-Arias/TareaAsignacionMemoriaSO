@@ -120,7 +120,7 @@ public class TareaAsignacionMemoriaSO {
                 int halfMemory = block.getMemory()/2;
                 emptyBlocksBuddy.get(indexOfBlock).setMemory(block.getMemory()-halfMemory);
                 Bloque emptyBlock = new Bloque(block.getAddress()+halfMemory, halfMemory);
-                if(emptyBlocksBuddy.size() != indexOfBlock) emptyBlocksBuddy.add(indexOfBlock+1,emptyBlock);
+                if(emptyBlocksBuddy.size() != indexOfBlock) emptyBlocksBuddy.add(indexOfBlock,emptyBlock);
                 else emptyBlocksBuddy.add(emptyBlock);
             }
             for (Bloque block : emptyBlocksBuddy){
@@ -136,6 +136,7 @@ public class TareaAsignacionMemoriaSO {
                     success = true;
                 }else if (block.getMemory()>memory){
                     int halfMemory = block.getMemory()/2;
+                    
                     if (halfMemory < memory){
                         Bloque dinamicMem = new Bloque(block.getAddress(), (int)next);
                         block.setAddress(block.getAddress()+(int)next);
@@ -235,6 +236,7 @@ public class TareaAsignacionMemoriaSO {
             process.setRejectedBuddy(true);
             rejectedProcsBuddy++;
         }
+        System.out.println(emptyBlocksBuddy.toString());
     }
     
     // Liberar un espacio de memoria random por cada algoritmo
@@ -354,7 +356,8 @@ public class TareaAsignacionMemoriaSO {
         while(!processes.isEmpty() && procCount <= 100){
             //Revisar si se debe crear un nuevo proceso
             long currentProcessTime = System.currentTimeMillis(); // Obtener el tiempo actual en milisegundos
-            double time = (double) (pastProcessTime-currentProcessTime)/1000;
+            double time = (double) (currentProcessTime-pastProcessTime)/1000;
+            
             if(time>betweenTime){
                 // Código de creación de un proceso nuevo cada n tiempo entre 10 o 30 segundos
                 int ranNum = random.nextInt(151)+50;
@@ -368,8 +371,9 @@ public class TareaAsignacionMemoriaSO {
             
             //Lista que define que acción hace cada proceso
             for(Proceso process : processes){
+                
                 long currentTime = System.currentTimeMillis(); // Obtener el tiempo actual en milisegundos
-                double timePassed = (double) (process.getStartTime()-currentTime)/1000; // Tiempo pasado desde la creación del proceso
+                double timePassed = (double) (currentTime-process.getStartTime())/1000; // Tiempo pasado desde la creación del proceso
                 boolean finishFlag = timePassed > process.getLifetime(); // Bandera que determina si un proceso ya finalizo su tiempo de ejecución
                 
                 if(!finishFlag){ //Funcionamiento normal de los procesos
@@ -377,7 +381,7 @@ public class TareaAsignacionMemoriaSO {
                     if(action <= 7){
                         int ranNum = random.nextInt(151)+50;
                         getMemory(process, ranNum);
-                        if(process.isProcessRejected()) finishedProcesses.add(process); 
+                        if(process.isProcessRejected()) finishedProcesses.add(process);
                     } else {
                         freeMemory(process, random);
                     }
@@ -401,15 +405,13 @@ public class TareaAsignacionMemoriaSO {
                     finishedProcesses.add(process); 
                 }
                 System.out.println(process.toString());
-                Visualization vis = new Visualization(processes);
-                vis.updateWindow(processes);//Actualizar ventana
             }
             // Eliminar de la lista de procesos los finalizados o rechazados
+            
             for(Proceso process : finishedProcesses){
                 processes.remove(process);
             }
             finishedProcesses.removeAll(finishedProcesses);
         }
-        
     }
 }

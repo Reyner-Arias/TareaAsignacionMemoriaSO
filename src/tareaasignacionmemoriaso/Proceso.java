@@ -131,7 +131,7 @@ public class Proceso {
     }
     
     public boolean isProcessRejected(){
-        return !rejectedFirst && !rejectedBest && !rejectedWorst && !rejectedBuddy;
+        return rejectedFirst && rejectedBest && rejectedWorst && rejectedBuddy;
     }
     
     @Override
