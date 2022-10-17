@@ -29,26 +29,29 @@ public class Visualization extends javax.swing.JFrame {
     
     public void paint(Graphics g) {
         int y = 50;
+        g.setColor(Color.white);
+        g.fillRect(0, 0, 5000, 5000);
+        g.setColor(Color.black);
+        g.drawRect(10,y, 1920, 49);
+        y+=60;
+        g.drawRect(10,y, 1920, 49);
+        y+=60;
+        g.drawRect(10,y, 1920, 49);
         for(Proceso process: processes ){
+            y = 50;
             for(Bloque block: process.getAllocatedBlocksFirst() ){
                 g.setColor(process.getColor());
-                g.fillRect(block.getAddress()+10,y, block.getAddress()+10+block.getMemory(), 50);
-                g.setColor(Color.black);
-                g.drawRect(block.getAddress()+10,y, block.getAddress()+10+block.getMemory(), 50);
+                g.fillRect(block.getAddress()+10,y, block.getMemory(), 50);
             } 
             y+=60;
             for(Bloque block: process.getAllocatedBlocksBest() ){
                 g.setColor(process.getColor());
-                g.fillRect(block.getAddress()+10,y, block.getAddress()+10+block.getMemory(), 50);   
-                g.setColor(Color.black);
-                g.drawRect(block.getAddress()+10,y, block.getAddress()+10+block.getMemory(), 50);
+                g.fillRect(block.getAddress()+10,y, block.getMemory(), 50);   
             } 
             y+=60;
             for(Bloque block: process.getAllocatedBlocksWorst()){
                 g.setColor(process.getColor());
-                g.fillRect(block.getAddress()+10,y, block.getAddress()+10+block.getMemory(), 50);  
-                g.setColor(Color.black);
-                g.drawRect(block.getAddress()+10,y, block.getAddress()+10+block.getMemory(), 50);
+                g.fillRect(block.getAddress()+10,y, block.getMemory(), 50);  
             } 
             y = 50;
         }

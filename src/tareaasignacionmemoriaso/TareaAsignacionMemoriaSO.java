@@ -379,7 +379,7 @@ public class TareaAsignacionMemoriaSO {
                 
                 if(!finishFlag){ //Funcionamiento normal de los procesos
                     int action = random.nextInt(10)+1;
-                    if(action <= 5){
+                    if(action <= 7){
                         int ranNum = random.nextInt(7)+3;
                         getMemory(process, ranNum);
                         if(process.isProcessRejected()) finishedProcesses.add(process);
@@ -392,7 +392,7 @@ public class TareaAsignacionMemoriaSO {
                     finishedProcesses.add(process); 
                 }
                 Visualization otherVis = new Visualization(processes);
-                sleep(300);
+                sleep(1000);
                 currentVis.destroyWindow();
                 currentVis = otherVis;
             }
