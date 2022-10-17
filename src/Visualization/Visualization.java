@@ -15,32 +15,45 @@ import tareaasignacionmemoriaso.Proceso;
  */
 public class Visualization extends javax.swing.JFrame {
 
-    static int memory = 1000;
     private List<Proceso> processes;
     public Visualization(List<Proceso> processes){
         this.processes = processes;
         setTitle("Tutorial");
-        setSize(memory+20, 500);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-    }
-    
-    public void updateWindow(List<Proceso> processes){
-        setVisible(false);
-        this.processes = processes;
+        setSize(1920, 500);
         setVisible(true);
     }
     
+    public void destroyWindow(){
+        this.dispose();
+    }
     
     public void paint(Graphics g) {
         int y = 50;
         for(Proceso process: processes ){
             for(Bloque block: process.getAllocatedBlocksFirst() ){
-                
                 g.setColor(process.getColor());
-                g.fillRect(block.getAddress(),y, block.getAddress()+block.getMemory(), 50);   
+                g.fillRect(block.getAddress()+10,y, block.getAddress()+10+block.getMemory(), 50);
+                g.setColor(Color.black);
+                g.drawRect(block.getAddress()+10,y, block.getAddress()+10+block.getMemory(), 50);
             } 
+            y+=60;
+            for(Bloque block: process.getAllocatedBlocksBest() ){
+                g.setColor(process.getColor());
+                g.fillRect(block.getAddress()+10,y, block.getAddress()+10+block.getMemory(), 50);   
+                g.setColor(Color.black);
+                g.drawRect(block.getAddress()+10,y, block.getAddress()+10+block.getMemory(), 50);
+            } 
+            y+=60;
+            for(Bloque block: process.getAllocatedBlocksWorst()){
+                g.setColor(process.getColor());
+                g.fillRect(block.getAddress()+10,y, block.getAddress()+10+block.getMemory(), 50);  
+                g.setColor(Color.black);
+                g.drawRect(block.getAddress()+10,y, block.getAddress()+10+block.getMemory(), 50);
+            } 
+            y = 50;
         }
     }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

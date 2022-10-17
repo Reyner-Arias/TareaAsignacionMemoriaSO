@@ -5,6 +5,7 @@ import java.awt.Color;
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
 import static java.lang.Math.pow;
+import static java.lang.Thread.sleep;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -105,42 +106,45 @@ public class TareaAsignacionMemoriaSO {
         return success;
     }
     
+    //Se intentó simular el Buddy System, pero tenía un error no identificado, por lo que aparecerá comentado en la entrega final
     public static boolean requestMemoryBuddy(Proceso currentProcess, int memory){
         // Pedir memoria
-        double next = pow(2, ceil(log(memory)/log(2)));
         boolean success = false; // Bandera para determinar si hay bloques libres
         boolean reject = false;
         int iterCount = 0;
         int emptyBlockIndex = -1;
         int indexOfBlock = -1;
         boolean notOptimalBlock = false;
-        while(!success || !reject){
+        while(!success && !reject){
             if(notOptimalBlock){
                 Bloque block = emptyBlocksBuddy.get(indexOfBlock);
                 int halfMemory = block.getMemory()/2;
                 emptyBlocksBuddy.get(indexOfBlock).setMemory(block.getMemory()-halfMemory);
                 Bloque emptyBlock = new Bloque(block.getAddress()+halfMemory, halfMemory);
-                if(emptyBlocksBuddy.size() != indexOfBlock) emptyBlocksBuddy.add(indexOfBlock,emptyBlock);
+                if(emptyBlocksBuddy.size() != indexOfBlock) emptyBlocksBuddy.add(indexOfBlock+1,emptyBlock);
                 else emptyBlocksBuddy.add(emptyBlock);
+                notOptimalBlock = false;
             }
             for (Bloque block : emptyBlocksBuddy){
-                indexOfBlock = emptyBlocksBuddy.indexOf(block);
+                
+                indexOfBlock = emptyBlocksBuddy.indexOf(block); 
                 if(block.getMemory() == 1){
-                    Bloque dinamicMem = new Bloque(block.getAddress(), memory);
-                    block.setAddress(block.getAddress()+memory);
-                    block.setMemory(block.getMemory()-memory);
+                    Bloque dinamicMem = new Bloque(block.getAddress(), 1);
+                    block.setAddress(block.getAddress()+1);
+                    block.setMemory(block.getMemory()-1);
                     if(block.getMemory() == 0){
                        emptyBlockIndex = emptyBlocksBuddy.indexOf(block); // Index del bloque con 0 en el atributo memoria, si es que existe
                     }
                     currentProcess.requestBlockBuddy( dinamicMem);
                     success = true;
-                }else if (block.getMemory()>memory){
+                    break;
+                }else if (block.getMemory() > memory){
                     int halfMemory = block.getMemory()/2;
-                    
-                    if (halfMemory < memory){
-                        Bloque dinamicMem = new Bloque(block.getAddress(), (int)next);
-                        block.setAddress(block.getAddress()+(int)next);
-                        block.setMemory(block.getMemory()-(int)next);
+                    if (halfMemory <= memory){
+                        Bloque dinamicMem = new Bloque(block.getAddress(), block.getMemory());
+                        //System.out.println("Bloque a pedir"+dinamicMem.toString());
+                        block.setAddress(block.getAddress()+block.getMemory());
+                        block.setMemory(block.getMemory()-block.getMemory());
                         if(block.getMemory() == 0){
                            emptyBlockIndex = emptyBlocksBuddy.indexOf(block); // Index del bloque con 0 en el atributo memoria, si es que existe
                         }
@@ -148,8 +152,8 @@ public class TareaAsignacionMemoriaSO {
                         success = true;
                     }else{
                         notOptimalBlock = true;
-                        break;
                     }
+                    break;
                 }
                 iterCount++;
             }
@@ -167,40 +171,60 @@ public class TareaAsignacionMemoriaSO {
         // Liberar memoria
         int index = getIndex(emptyBlocks, freeBlock);
         boolean success = false; // Bandera que nos dice si el bloque liberado se combinó con algún otro
-        
-        if(index == 0 && !emptyBlocks.isEmpty()){
+        //System.out.println("Bloque a liberar"+freeBlock.toString());
+        if(index == 0){
             Bloque nextBlock = emptyBlocks.get(index);
             if(freeBlock.getAddress()+freeBlock.getMemory() == nextBlock.getAddress()){
                 emptyBlocks.get(index).setAddress(freeBlock.getAddress());
                 emptyBlocks.get(index).setMemory(nextBlock.getMemory()+freeBlock.getMemory());
                 success = true;
             }
-        } else if (index == emptyBlocks.size() && !emptyBlocks.isEmpty()){
+        } else if (index == emptyBlocks.size()){
             Bloque previousBlock = emptyBlocks.get(index-1);
             if(previousBlock.getMemory()+previousBlock.getAddress() == freeBlock.getAddress()){
                 emptyBlocks.get(index-1).setMemory(previousBlock.getMemory()+freeBlock.getMemory());
                 success = true;
             }
-        } else if (!emptyBlocks.isEmpty()){
+        } else {
             Bloque previousBlock = emptyBlocks.get(index-1);
             Bloque nextBlock = emptyBlocks.get(index);
-            if(freeBlock.getAddress()+freeBlock.getMemory() == nextBlock.getAddress()){
+            if (freeBlock.getAddress()+freeBlock.getMemory() == nextBlock.getAddress() && previousBlock.getMemory()+previousBlock.getAddress() == freeBlock.getAddress()){
+                emptyBlocks.get(index).setMemory(previousBlock.getMemory()+nextBlock.getMemory()+freeBlock.getMemory());
+                emptyBlocks.get(index).setAddress(previousBlock.getAddress());
+                emptyBlocks.remove(index-1);
+                success = true;
+            }else if(freeBlock.getAddress()+freeBlock.getMemory() == nextBlock.getAddress()){
                 emptyBlocks.get(index).setAddress(freeBlock.getAddress());
                 emptyBlocks.get(index).setMemory(nextBlock.getMemory()+freeBlock.getMemory());
                 success = true;
-            }
-            if(previousBlock.getMemory()+previousBlock.getAddress() == freeBlock.getAddress() && !success){
+            }else if(previousBlock.getMemory()+previousBlock.getAddress() == freeBlock.getAddress()){
                 emptyBlocks.get(index-1).setMemory(previousBlock.getMemory()+freeBlock.getMemory());
                 success = true;
-            } else {
-                emptyBlocks.get(index).setMemory(previousBlock.getMemory()+nextBlock.getMemory());
-                emptyBlocks.get(index).setAddress(previousBlock.getAddress());
-                emptyBlocks.remove(index-1);
             }
         }
         if(!success){
             emptyBlocks.add(index, freeBlock);
         }
+    }
+    
+    public static double next(int mem){
+        return pow(2, ceil(log(mem)/log(2)));
+    }
+    
+    public static void releaseMemoryBuddy(Bloque freeBlock){
+        // Liberar memoria
+        int index = getIndex(emptyBlocksBuddy, freeBlock);
+        //System.out.println("Bloque a liberar"+freeBlock.toString());
+        
+        Bloque nextBlock = emptyBlocksBuddy.get(index);
+        while(freeBlock.getAddress()+nextBlock.getMemory() == freeBlock.getAddress()*2 && freeBlock.getAddress()+freeBlock.getMemory() == nextBlock.getAddress() && next(nextBlock.getMemory()+freeBlock.getMemory()) == nextBlock.getMemory()+freeBlock.getMemory()){
+            emptyBlocksBuddy.get(index).setAddress(freeBlock.getAddress());
+            emptyBlocksBuddy.get(index).setMemory(nextBlock.getMemory()+freeBlock.getMemory());
+            freeBlock = emptyBlocksBuddy.remove(index);
+            nextBlock = emptyBlocksBuddy.get(index);
+        }
+        
+        emptyBlocksBuddy.add(index, freeBlock);
     }
     
     public static void getMemory(Proceso process, int ranNum){
@@ -228,15 +252,14 @@ public class TareaAsignacionMemoriaSO {
             process.setRejectedWorst(true);
             rejectedProcsWorst++;
         }
-        
-        // Solicitar memoria usando Worst Fit
+        /*
+        // Solicitar memoria usando Buddy System
         if(!process.getRejectedBuddy()) success = requestMemoryBuddy(process, ranNum);
         else success = false;
         if(!success && !process.getRejectedBuddy()) {
             process.setRejectedBuddy(true);
             rejectedProcsBuddy++;
-        }
-        System.out.println(emptyBlocksBuddy.toString());
+        }*/
     }
     
     // Liberar un espacio de memoria random por cada algoritmo
@@ -262,66 +285,43 @@ public class TareaAsignacionMemoriaSO {
             releaseMemory(removedBlock, emptyBlocksWorst);
         }
         
-        // Liberar memoria random usando Buddy Fit
+        /*
+        // Liberar memoria random usando Buddy System
         if(!process.getRejectedBuddy() && process.getAllocatedBlocksBuddy().size() > 1) {
             int ranNum = random.nextInt(process.getAllocatedBlocksBuddy().size()-1)+1;
             Bloque removedBlock = process.freeBlockBuddy(ranNum);
-            releaseMemory(removedBlock, emptyBlocksBuddy);
+            releaseMemoryBuddy(removedBlock);
         }
-    }
-    
-    
-    public static List<Color> pick(int num) {
-        List<Color> colors = new LinkedList<>();
-        if (num < 2)
-            return colors;
-        float dx = 1.0f / (float) (num - 1);
-        for (int i = 0; i < num; i++) {
-            colors.add(get(i * dx));
-        }
-        return colors;
+        */
     }
 
-    public static Color get(float x) {
-        float r = 0.0f;
-        float g = 0.0f;
-        float b = 1.0f;
-        if (x >= 0.0f && x < 0.2f) {
-            x = x / 0.2f;
-            r = 0.0f;
-            g = x;
-            b = 1.0f;
-        } else if (x >= 0.2f && x < 0.4f) {
-            x = (x - 0.2f) / 0.2f;
-            r = 0.0f;
-            g = 1.0f;
-            b = 1.0f - x;
-        } else if (x >= 0.4f && x < 0.6f) {
-            x = (x - 0.4f) / 0.2f;
-            r = x;
-            g = 1.0f;
-            b = 0.0f;
-        } else if (x >= 0.6f && x < 0.8f) {
-            x = (x - 0.6f) / 0.2f;
-            r = 1.0f;
-            g = 1.0f - x;
-            b = 0.0f;
-        } else if (x >= 0.8f && x <= 1.0f) {
-            x = (x - 0.8f) / 0.2f;
-            r = 1.0f;
-            g = 0.0f;
-            b = x;
-        }
+    public static Color get(int pid) {
+        Random random = new Random();
+        random.setSeed(pid); // Establecer semilla para los valores randomizados
+        int r = random.nextInt(256);
+        int g = random.nextInt(256);
+        int b = random.nextInt(256);
+        
         return new Color(r, g, b);
     }
     
-    public static void main(String[] args) {
+    public static int getFreeMemory(){
+        int res = 0;
+        for (Bloque block : emptyBlocksBuddy){
+            res += block.getMemory();
+        }
+        return res;
+    }
+    
+    public static void main(String[] args) throws InterruptedException{
         emptyBlocksFirst = new LinkedList<>();
         emptyBlocksBest = new LinkedList<>();
         emptyBlocksWorst = new LinkedList<>();
         emptyBlocksBuddy = new LinkedList<>();
         
-        int totalMemory = 1048576; // Memoria total inicial
+        //System.out.println(emptyBlocksBuddy.toString());
+        
+        int totalMemory = 1920; // Memoria total inicial
         List<Proceso> processes = new LinkedList<>();
         List<Proceso> finishedProcesses = new LinkedList<>();
         
@@ -340,33 +340,33 @@ public class TareaAsignacionMemoriaSO {
         
         int procCount = 0; //Cantidad de procesos creados hasta el momento
         
+        int firstRanNum = random.nextInt(7)+3;
+        //System.out.println("primer bloque"+emptyBlocksBuddy.toString());
         
-        
-        int firstRanNum = random.nextInt(151)+50;
-        
-        List<Color> colores = pick(100);
-        
-        Proceso firstProcess = new Proceso(random.nextInt(271)+30, colores.get(procCount)); // Crear una nueva instancia de la clase Proceso con un tiempo de vida de 30 a 300 segundos
+        Proceso firstProcess = new Proceso(random.nextInt(31)+20, get(procCount)); // Crear una nueva instancia de la clase Proceso con un tiempo de vida de 30 a 300 segundos
         getMemory(firstProcess, firstRanNum);
         processes.add(firstProcess);
+        //System.out.println("primera memoria"+emptyBlocksBuddy.toString());
         procCount++;
         long pastProcessTime = System.currentTimeMillis(); // Obtener el tiempo actual en milisegundos para conocer hace cuánto se definió el último proceso
-        int betweenTime = random.nextInt(21)+10;
+        int betweenTime = random.nextInt(6)+5;
         
-        while(!processes.isEmpty() && procCount <= 100){
+        Visualization currentVis = new Visualization(processes);
+        
+        while(procCount < 100 || !processes.isEmpty()){
             //Revisar si se debe crear un nuevo proceso
             long currentProcessTime = System.currentTimeMillis(); // Obtener el tiempo actual en milisegundos
             double time = (double) (currentProcessTime-pastProcessTime)/1000;
             
-            if(time>betweenTime){
+            if(time>betweenTime && procCount < 100){
                 // Código de creación de un proceso nuevo cada n tiempo entre 10 o 30 segundos
-                int ranNum = random.nextInt(151)+50;
-                Proceso process = new Proceso(random.nextInt(271)+30, colores.get(procCount)); // Crear una nueva instancia de la clase Proceso con un tiempo de vida de 30 a 300 segundos
+                int ranNum = random.nextInt(7)+3;
+                Proceso process = new Proceso(random.nextInt(31)+20, get(procCount)); // Crear una nueva instancia de la clase Proceso con un tiempo de vida de 30 a 300 segundos
                 getMemory(process, ranNum);
                 processes.add(process);
                 procCount++;
                 pastProcessTime = System.currentTimeMillis(); // Obtener el tiempo actual en milisegundos para conocer hace cuánto se definió el último proceso
-                betweenTime = random.nextInt(21)+10;
+                betweenTime = random.nextInt(6)+5;
             }
             
             //Lista que define que acción hace cada proceso
@@ -374,44 +374,59 @@ public class TareaAsignacionMemoriaSO {
                 
                 long currentTime = System.currentTimeMillis(); // Obtener el tiempo actual en milisegundos
                 double timePassed = (double) (currentTime-process.getStartTime())/1000; // Tiempo pasado desde la creación del proceso
+                
                 boolean finishFlag = timePassed > process.getLifetime(); // Bandera que determina si un proceso ya finalizo su tiempo de ejecución
                 
                 if(!finishFlag){ //Funcionamiento normal de los procesos
                     int action = random.nextInt(10)+1;
-                    if(action <= 7){
-                        int ranNum = random.nextInt(151)+50;
+                    if(action <= 5){
+                        int ranNum = random.nextInt(7)+3;
                         getMemory(process, ranNum);
                         if(process.isProcessRejected()) finishedProcesses.add(process);
+                        //System.out.println("Por cada request "+emptyBlocksBuddy.toString());
                     } else {
                         freeMemory(process, random);
+                        //System.out.println("Por cada free"+emptyBlocksBuddy.toString());
                     }
                 } else { //Liberar toda la memoria de un proceso que finaliza su ejecución, para las 4 memorias de cada algoritmo
-                    for(int i = 0; i < process.getAllocatedBlocksFirst().size(); i++){
-                        Bloque freeBlock = process.freeBlockFirst(i);
-                        releaseMemory(freeBlock, emptyBlocksFirst);
-                    }
-                    for(int i = 0; i < process.getAllocatedBlocksBest().size(); i++){
-                        Bloque freeBlock = process.freeBlockBest(i);
-                        releaseMemory(freeBlock, emptyBlocksBest);
-                    }
-                    for(int i = 0; i < process.getAllocatedBlocksWorst().size(); i++){
-                        Bloque freeBlock = process.freeBlockWorst(i);
-                        releaseMemory(freeBlock, emptyBlocksWorst);
-                    }
-                    for(int i = 0; i < process.getAllocatedBlocksBuddy().size(); i++){
-                        Bloque freeBlock = process.freeBlockBuddy(i);
-                        releaseMemory(freeBlock, emptyBlocksBuddy);
-                    }
                     finishedProcesses.add(process); 
                 }
-                System.out.println(process.toString());
+                Visualization otherVis = new Visualization(processes);
+                sleep(300);
+                currentVis.destroyWindow();
+                currentVis = otherVis;
             }
-            // Eliminar de la lista de procesos los finalizados o rechazados
-            
+            // Eliminar de la lista de procesos los finalizados o rechazados\
             for(Proceso process : finishedProcesses){
+                
+                for(int i = process.getAllocatedBlocksFirst().size()-1; i >= 0; i--){
+                    Bloque freeBlock = process.freeBlockFirst(i);
+                    releaseMemory(freeBlock, emptyBlocksFirst);
+                }
+                for(int i = process.getAllocatedBlocksBest().size()-1; i >= 0; i--){
+                    Bloque freeBlock = process.freeBlockBest(i);
+                    releaseMemory(freeBlock, emptyBlocksBest);
+                }
+                
+                for(int i = process.getAllocatedBlocksWorst().size()-1; i >= 0; i--){
+                    Bloque freeBlock = process.freeBlockWorst(i);
+                    releaseMemory(freeBlock, emptyBlocksWorst);
+                    
+                }
+                //System.out.println("Pre Liberar Mem final"+emptyBlocksBuddy.toString());
+                for(int i = process.getAllocatedBlocksBuddy().size()-1; i >= 0; i--){
+                    Bloque freeBlock = process.freeBlockBuddy(i);
+                    releaseMemoryBuddy(freeBlock);
+                    //System.out.println("Liberar Mem final"+emptyBlocksBuddy.toString());
+                }
                 processes.remove(process);
             }
             finishedProcesses.removeAll(finishedProcesses);
         }
+        //System.out.println(rejectedProcsFirst);
+        //System.out.println(rejectedProcsBest);
+        //System.out.println(rejectedProcsWorst);
+        //System.out.println(rejectedProcsBuddy);
+        //System.out.println(procCount);
     }
 }
